@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - postgres
+    volumes:
+      - ./migrations:/migrations
+    command:
+      - "-path=/migrations/"
+      - "-database=postgres://${DB_USER}:${DB_PASSWORD}@DB_HOST:DB_PORT/${DB_NAME}?sslmode=disable"
+      - "up"
+
+volumes:
+  pgdata:
