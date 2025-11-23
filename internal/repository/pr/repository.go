@@ -180,7 +180,7 @@ func (r *repository) Merge(ctx context.Context, prID string) (*model.PullRequest
 	return pr, nil
 }
 
-func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID string) (*model.PullRequest, error) {
+func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID string) (*model.PullRequest, string, error) {
 	var (
 		name, author        string
 		statusID            int
@@ -196,14 +196,14 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 		QueryRowContext(ctx, getPrQuery, prID).
 		Scan(&name, &author, &statusID, &createdAt, &mergedAt)
 	if err == sql.ErrNoRows {
-		return nil, model.ErrNotFound
+		return nil, "", model.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("select pr error: %v", err)
+		return nil, "", fmt.Errorf("select pr error: %v", err)
 	}
 
 	if idToStatus(statusID) == "MERGED" {
-		return nil, model.ErrPrMerged
+		return nil, "", model.ErrPrMerged
 	}
 
 	getReviewerIdQuery := `
@@ -214,7 +214,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 		QueryContext(ctx, getReviewerIdQuery, prID)
 
 	if err != nil {
-		return nil, fmt.Errorf("get reviewers error: %v", err)
+		return nil, "", fmt.Errorf("get reviewers error: %v", err)
 	}
 	defer rows.Close()
 
@@ -223,7 +223,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 	for rows.Next() {
 		var rid string
 		if err := rows.Scan(&rid); err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		reviewers = append(reviewers, rid)
 		if rid == oldReviewerID {
@@ -231,7 +231,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 		}
 	}
 	if !found {
-		return nil, model.ErrNotFound
+		return nil, "", model.ErrNotFound
 	}
 
 	getTeamNameQuery := `
@@ -243,7 +243,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 		Scan(&teamName)
 
 	if err != nil {
-		return nil, model.ErrNotFound
+		return nil, "", model.ErrNotFound
 	}
 
 	getNewReviewerQuery := `
@@ -261,7 +261,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 	if err == sql.ErrNoRows {
 		newReviewer = oldReviewerID
 	} else if err != nil {
-		return nil, fmt.Errorf("get new reviewer error: %v", err)
+		return nil, "", fmt.Errorf("get new reviewer error: %v", err)
 	}
 
 	updateReviewerQuery := `
@@ -274,7 +274,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 			ExecContext(ctx, updateReviewerQuery, newReviewer, prID, oldReviewerID)
 
 		if err != nil {
-			return nil, fmt.Errorf("update reviewer error: %v", err)
+			return nil, "", fmt.Errorf("update reviewer error: %v", err)
 		}
 
 		for i := range reviewers {
@@ -297,7 +297,7 @@ func (r *repository) Reassign(ctx context.Context, prID string, oldReviewerID st
 		MergedAt:          mergedAt,
 	}
 
-	return pr, nil
+	return pr, newReviewer, nil
 }
 
 func statusToID(status string) int {

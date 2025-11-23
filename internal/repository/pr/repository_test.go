@@ -260,7 +260,7 @@ func TestReassignSuccess(t *testing.T) {
 		WithArgs(newReviewer, prID, oldReviewer).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	pr, err := repo.Reassign(context.Background(), prID, oldReviewer)
+	pr, _, err := repo.Reassign(context.Background(), prID, oldReviewer)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
