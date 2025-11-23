@@ -57,15 +57,13 @@ func (r *repository) SetIsActive(ctx context.Context, userID string, isActive bo
 	return &user, nil
 }
 
-func (r *repository) GetReview(ctx context.Context, reviewerID string) ([]*model.PullRequest, error) {
+func (r *repository) GetReview(ctx context.Context, reviewerID string) ([]*model.PullRequestShort, error) {
 	query := `
         SELECT 
             pr.pull_request_id,
             pr.pull_request_name,
             pr.author_id,
-            ps.status_name,
-            pr.created_at,
-            pr.merged_at
+            ps.status_name
         FROM pull_requests pr
         INNER JOIN pull_request_statuses ps 
             ON pr.status_id = ps.status_id
@@ -81,55 +79,21 @@ func (r *repository) GetReview(ctx context.Context, reviewerID string) ([]*model
 	}
 	defer rows.Close()
 
-	pullRequests := make([]*model.PullRequest, 0)
+	pullRequests := make([]*model.PullRequestShort, 0)
 
 	for rows.Next() {
-		pr := &model.PullRequest{}
+		pr := &model.PullRequestShort{}
 		err = rows.Scan(
 			&pr.PullRequestID,
 			&pr.PullRequestName,
 			&pr.AuthorID,
 			&pr.Status,
-			&pr.CreatedAt,
-			&pr.MergedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan pull request: %v", err)
 		}
-
-		reviewers, err := r.getReviewersForPR(ctx, pr.PullRequestID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get reviewers: %v", err)
-		}
-		pr.AssignedReviewers = reviewers
-
 		pullRequests = append(pullRequests, pr)
 	}
 
 	return pullRequests, nil
-}
-
-func (r *repository) getReviewersForPR(ctx context.Context, prID string) ([]string, error) {
-	query := `
-        SELECT reviewer_user_id 
-        FROM pull_request_reviewers 
-        WHERE pull_request_id = $1
-    `
-
-	rows, err := r.db.QueryContext(ctx, query, prID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	reviewers := make([]string, 0)
-	for rows.Next() {
-		var reviewerID string
-		if err := rows.Scan(&reviewerID); err != nil {
-			return nil, err
-		}
-		reviewers = append(reviewers, reviewerID)
-	}
-
-	return reviewers, nil
 }

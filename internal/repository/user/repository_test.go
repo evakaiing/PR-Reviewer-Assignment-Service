@@ -6,7 +6,6 @@ import (
 	model "github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/model"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
-	"time"
 )
 
 func TestSetIsActiveSuccess(t *testing.T) {
@@ -99,45 +98,17 @@ func TestGetReviewSuccess(t *testing.T) {
 
 	repo := &repository{db: db}
 
-	now := time.Now()
-	mergedTime := now.Add(-1 * time.Hour)
-
 	prRows := sqlmock.NewRows([]string{
 		"pull_request_id", "pull_request_name", "author_id",
-		"status_name", "created_at", "merged_at",
+		"status_name",
 	}).
-		AddRow("pr-1001", "Add search", "u1", "OPEN", now, nil).
-		AddRow("pr-1002", "Add readme", "u2", "MERGED", now, &mergedTime)
+		AddRow("pr-1001", "Add search", "u1", "OPEN").
+		AddRow("pr-1002", "Add readme", "u2", "MERGED")
 
 	mock.
-		ExpectQuery(
-			`SELECT             
-				pr.pull_request_id,
-				pr.pull_request_name,
-				pr.author_id,
-				ps.status_name,
-				pr.created_at,
-				pr.merged_at 
-			FROM pull_requests pr`).
+		ExpectQuery("SELECT pr.pull_request_id, pr.pull_request_name, pr.author_id, ps.status_name FROM pull_requests pr").
 		WithArgs("reviewer1").
 		WillReturnRows(prRows)
-
-	reviewersRows1 := sqlmock.NewRows([]string{"reviewer_user_id"}).
-		AddRow("reviewer1").
-		AddRow("reviewer2")
-
-	mock.
-		ExpectQuery("SELECT reviewer_user_id FROM pull_request_reviewers").
-		WithArgs("pr-1001").
-		WillReturnRows(reviewersRows1)
-
-	reviewersRows2 := sqlmock.NewRows([]string{"reviewer_user_id"}).
-		AddRow("reviewer1")
-
-	mock.
-		ExpectQuery("SELECT reviewer_user_id FROM pull_request_reviewers").
-		WithArgs("pr-1002").
-		WillReturnRows(reviewersRows2)
 
 	prs, err := repo.GetReview(context.Background(), "reviewer1")
 

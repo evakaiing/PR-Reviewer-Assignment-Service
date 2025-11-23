@@ -4,6 +4,7 @@ import (
 	"context"
 	model "github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/model"
 )
+//go:generate mockgen -source=repository.go -destination=../mocks/mock_repository.go -package=mocks
 
 type TeamRepository interface {
 	Add(ctx context.Context, team *model.Team) error
@@ -12,7 +13,7 @@ type TeamRepository interface {
 
 type UserRepository interface {
 	SetIsActive(ctx context.Context, userID string, isActive bool) (*model.User, error)
-	GetReview(ctx context.Context, userID string) ([]*model.PullRequest, error)
+	GetReview(ctx context.Context, userID string) ([]*model.PullRequestShort, error)
 }
 
 type PullRequestRepository interface {
