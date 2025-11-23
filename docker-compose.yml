@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: postgres
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -10,16 +12,44 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   migrate:
     image: migrate/migrate
+    container_name: migrate
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./migrations:/migrations
     command:
-      - "-path=/migrations/"
-      - "-database=postgres://${DB_USER}:${DB_PASSWORD}@DB_HOST:DB_PORT/${DB_NAME}?sslmode=disable"
+      - "-path=/migrations"
+      - "-database=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable"
       - "up"
+    restart: on-failure
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pr-app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 
 volumes:
   pgdata:
