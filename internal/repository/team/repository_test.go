@@ -35,14 +35,15 @@ func TestAddSuccess(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"team_id"}).AddRow(1))
 
 	mock.
-		ExpectExec("UPDATE users SET team_name").
-		WithArgs("backend", "u1").
-		WillReturnResult(sqlmock.NewResult(0, 1))
+        ExpectExec("INSERT INTO users").
+        WithArgs("u1", "Alice", "backend", true).
+        WillReturnResult(sqlmock.NewResult(0, 1))
+
 
 	mock.
-		ExpectExec("UPDATE users SET team_name").
-		WithArgs("backend", "u2").
-		WillReturnResult(sqlmock.NewResult(0, 1))
+        ExpectExec("INSERT INTO users").
+        WithArgs("u2", "Bob", "backend", true).
+        WillReturnResult(sqlmock.NewResult(0, 1))
 
 	mock.
 		ExpectCommit()
@@ -87,47 +88,6 @@ func TestAddTeamExists(t *testing.T) {
 
 	if !errors.Is(err, model.ErrTeamExists) {
 		t.Errorf("expected ErrTeamExists, got: %v", err)
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("unfulfilled expectations: %v", err)
-	}
-}
-
-func TestAddUserNotFound(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create mock: %v", err)
-	}
-	defer db.Close()
-
-	repo := &repository{db: db}
-
-	team := &model.Team{
-		TeamName: "backend",
-		Members:  []*model.TeamMember{{UserID: "none"}},
-	}
-
-	mock.
-		ExpectBegin()
-
-	mock.
-		ExpectQuery("INSERT INTO teams").
-		WithArgs("backend").
-		WillReturnRows(sqlmock.NewRows([]string{"team_id"}).AddRow(1))
-
-	mock.
-		ExpectExec("UPDATE users SET team_name").
-		WithArgs("backend", "none").
-		WillReturnResult(sqlmock.NewResult(0, 0))
-
-	mock.
-		ExpectRollback()
-
-	err = repo.Add(context.Background(), team)
-
-	if !errors.Is(err, model.ErrNotFound) {
-		t.Errorf("expected ErrUserNotFound, got: %v", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
