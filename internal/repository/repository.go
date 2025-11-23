@@ -19,5 +19,5 @@ type UserRepository interface {
 type PullRequestRepository interface {
 	Create(ctx context.Context, req model.PullRequestPayload) (*model.PullRequest, error)
 	Merge(ctx context.Context, prID string) (*model.PullRequest, error)
-	Reassign(ctx context.Context, prID string, oldReviewerID string) (*model.PullRequest, error)
+	Reassign(ctx context.Context, prID string, oldReviewerID string) (*model.PullRequest, string, error)
 }
