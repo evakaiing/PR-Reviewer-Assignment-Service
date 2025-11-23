@@ -3,9 +3,10 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"os"
 	"time"
+	_ "github.com/lib/pq" 
+	"context"
 )
 
 func NewPostgresDB() (*sql.DB, error) {
@@ -20,7 +21,7 @@ func NewPostgresDB() (*sql.DB, error) {
 		user, password, host, port, dbname,
 	)
 
-	db, err := sql.Open("pgx", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %v", err)
 	}
@@ -30,9 +31,17 @@ func NewPostgresDB() (*sql.DB, error) {
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetConnMaxIdleTime(1 * time.Minute)
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %v", err)
-	}
+    maxAttempts := 10
+    for i := 0; i < maxAttempts; i++ {
+        ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+        err = db.PingContext(ctx)
+        cancel()
+        
+        if err == nil {
+            return db, nil
+        }
+        time.Sleep(2 * time.Second)
+    }
 
-	return db, nil
+    return nil, fmt.Errorf("failed to connect: %v", err)
 }
