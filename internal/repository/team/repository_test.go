@@ -35,15 +35,14 @@ func TestAddSuccess(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"team_id"}).AddRow(1))
 
 	mock.
-        ExpectExec("INSERT INTO users").
-        WithArgs("u1", "Alice", "backend", true).
-        WillReturnResult(sqlmock.NewResult(0, 1))
-
+		ExpectExec("INSERT INTO users").
+		WithArgs("u1", "Alice", "backend", true).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	mock.
-        ExpectExec("INSERT INTO users").
-        WithArgs("u2", "Bob", "backend", true).
-        WillReturnResult(sqlmock.NewResult(0, 1))
+		ExpectExec("INSERT INTO users").
+		WithArgs("u2", "Bob", "backend", true).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	mock.
 		ExpectCommit()

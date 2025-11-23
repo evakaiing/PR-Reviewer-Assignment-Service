@@ -2,6 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/database"
+	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/handlers"
+	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/pr"
+	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/team"
+	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/user"
+	"github.com/spf13/viper"
 	"log"
 	"log/slog"
 	"net/http"
@@ -9,30 +15,24 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"github.com/spf13/viper"
-	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/database"
-	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/handlers"
-	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/user"
-	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/team"
-	"github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/repository/pr"
 )
 
 // TODO: (task-2) add validator
 // TODO: (task-3) add middleware for logg
 
 func initConfig() error {
-    viper.AddConfigPath("configs")
-    viper.SetConfigName("config")
-    viper.SetConfigType("yml")
-    viper.AutomaticEnv()
-    
-    return viper.ReadInConfig()
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	viper.SetConfigType("yml")
+	viper.AutomaticEnv()
+
+	return viper.ReadInConfig()
 }
 
 func main() {
 	if err := initConfig(); err != nil {
-        log.Fatalf("failed to initialize configs: %v", err.Error())
-    }
+		log.Fatalf("failed to initialize configs: %v", err.Error())
+	}
 
 	logger := *slog.New(slog.NewTextHandler(os.Stdout, nil))
 
@@ -64,13 +64,13 @@ func main() {
 	mux.HandleFunc("POST /pullRequest/merge", prHandler.Merge)
 	mux.HandleFunc("POST /pullRequest/reassign", prHandler.Reassign)
 
-    srv := &http.Server{
-        Addr:         ":" + viper.GetString("server.port"),
-        Handler:      mux,
-        ReadTimeout:  viper.GetDuration("server.read_timeout"),
-        WriteTimeout: viper.GetDuration("server.write_timeout"),
-        IdleTimeout:  viper.GetDuration("server.idle_timeout"),
-    }
+	srv := &http.Server{
+		Addr:         ":" + viper.GetString("server.port"),
+		Handler:      mux,
+		ReadTimeout:  viper.GetDuration("server.read_timeout"),
+		WriteTimeout: viper.GetDuration("server.write_timeout"),
+		IdleTimeout:  viper.GetDuration("server.idle_timeout"),
+	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

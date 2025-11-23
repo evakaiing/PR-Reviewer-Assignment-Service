@@ -4,6 +4,7 @@ import (
 	"context"
 	model "github.com/evakaiing/PR-Reviewer-Assignment-Service/internal/model"
 )
+
 //go:generate mockgen -source=repository.go -destination=../mocks/mock_repository.go -package=mocks
 
 type TeamRepository interface {

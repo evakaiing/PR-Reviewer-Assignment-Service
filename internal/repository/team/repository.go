@@ -42,7 +42,7 @@ func (r *repository) Add(ctx context.Context, team *model.Team) error {
 		return fmt.Errorf("failed to create team: %v", err)
 	}
 
-	updateOrInsertQuery :=  `
+	updateOrInsertQuery := `
 		INSERT INTO users (user_id, username, team_name, is_active)
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (user_id) 
@@ -54,11 +54,11 @@ func (r *repository) Add(ctx context.Context, team *model.Team) error {
 	`
 
 	for _, member := range team.Members {
-		_, err := tx.ExecContext(ctx, updateOrInsertQuery, 
-            member.UserID,
-            member.Username,
-            team.TeamName,
-            member.IsActive)
+		_, err := tx.ExecContext(ctx, updateOrInsertQuery,
+			member.UserID,
+			member.Username,
+			team.TeamName,
+			member.IsActive)
 		if err != nil {
 			return fmt.Errorf("failed to add member to team: %v", err)
 		}

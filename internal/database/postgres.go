@@ -1,12 +1,12 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"os"
 	"time"
-	_ "github.com/lib/pq" 
-	"context"
 )
 
 func NewPostgresDB() (*sql.DB, error) {
@@ -31,17 +31,17 @@ func NewPostgresDB() (*sql.DB, error) {
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetConnMaxIdleTime(1 * time.Minute)
 
-    maxAttempts := 10
-    for i := 0; i < maxAttempts; i++ {
-        ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-        err = db.PingContext(ctx)
-        cancel()
-        
-        if err == nil {
-            return db, nil
-        }
-        time.Sleep(2 * time.Second)
-    }
+	maxAttempts := 10
+	for i := 0; i < maxAttempts; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		err = db.PingContext(ctx)
+		cancel()
 
-    return nil, fmt.Errorf("failed to connect: %v", err)
+		if err == nil {
+			return db, nil
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil, fmt.Errorf("failed to connect: %v", err)
 }
