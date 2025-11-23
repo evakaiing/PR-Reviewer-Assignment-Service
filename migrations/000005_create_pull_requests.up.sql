@@ -19,4 +19,4 @@ CREATE TABLE pull_requests (
 CREATE INDEX idx_pull_requests_author_id ON pull_requests(author_id);
 CREATE INDEX idx_pull_requests_status_id ON pull_requests(status_id);
 CREATE INDEX idx_pull_requests_author_status ON pull_requests(author_id, status_id);
-CREATE INDEX idx_pull_requests_created_at ON pull_requests(created_at DESC);
+CREATE INDEX idx_pull_requests_created_at ON pull_requests(createdAt DESC);

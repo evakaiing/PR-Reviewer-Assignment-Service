@@ -3,7 +3,7 @@ CREATE TABLE pull_request_reviewers (
     , reviewer_user_id VARCHAR(255) NOT NULL
     , assigned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
     
-    , PRIMARY KEY (pull_request_id reviewer_user_id)
+    , PRIMARY KEY (pull_request_id, reviewer_user_id)
     
     , CONSTRAINT pr_reviewers_pull_request_id_fkey 
         FOREIGN KEY (pull_request_id) 
