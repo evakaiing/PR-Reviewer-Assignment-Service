@@ -9,6 +9,8 @@ var (
 	ErrNotAssigned = errors.New("not assigned")
 	ErrNoCandidate = errors.New("no candidate")
 	ErrNotFound    = errors.New("not found")
+	ErrInvalidInput  = errors.New("invalid input")
+    ErrMissingParam  = errors.New("missing required parameter") 
 )
 
 type ErrorDetails struct {
