@@ -8,6 +8,7 @@ git clone https://github.com/evakaiing/PR-Reviewer-Assignment-Service.git
 cd PR-Reviewer-Assignment-Service
 ```
 2. Настройка переменных окружения
+
 Добавьте нужные параметры окружения в .env согласно .env.example или выполните команду:
 ```
 сp .env.example .env
